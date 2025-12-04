@@ -1,19 +1,19 @@
 name: Render SC-400 PDFs
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:   # Allows manual run from the Actions tab
   push:
-    branches: [ "main" ]
+    branches: [ "main" ]   # Also runs automatically when you push changes
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repo
+    - name: Checkout repository
       uses: actions/checkout@v3
 
-    - name: Setup Node
+    - name: Setup Node.js
       uses: actions/setup-node@v3
       with:
         node-version: 18
@@ -24,14 +24,25 @@ jobs:
     - name: Install Chromium dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y libnss3 \
-          libgtk-3-0 libxss1 libasound2 libx11-xcb1 libxcomposite1 \
-          libxcursor1 libxdamage1 libxi6 libxtst6 libglib2.0-0 \
-          libpangocairo-1.0-0 libxrandr2 libgbm1 libxkbcommon0
+        sudo apt-get install -y \
+          libnss3 \
+          libgtk-3-0 \
+          libxss1 \
+          libasound2 \
+          libx11-xcb1 \
+          libxcomposite1 \
+          libxcursor1 \
+          libxdamage1 \
+          libxi6 \
+          libxtst6 \
+          libglib2.0-0 \
+          libpangocairo-1.0-0 \
+          libxrandr2 \
+          libgbm1 \
+          libxkbcommon0
 
-    - name: Run renderer
-      run: |
-        node fetch.js
+    - name: Run SC-400 renderer
+      run: node fetch.js
 
     - name: Upload generated PDFs
       uses: actions/upload-artifact@v3
