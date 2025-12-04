@@ -1,41 +1,88 @@
 const fs = require("fs");
 const puppeteer = require("puppeteer");
 
-const BASE = "https://learn.cloudpartner.fi/categories/sc-400";
+const BASE = "https://learn.cloudpartner.fi";
+const CATEGORY_URL = BASE + "/categories/sc-400";
 
 async function scrape() {
+    console.log("🔎 Loading SC-400 category page…");
 
-    const browser = await puppeteer.launch({ headless: "new" });
+    // Launch Chromium in CI-safe mode
+    const browser = await puppeteer.launch({
+        headless: true,
+        args: [
+            "--no-sandbox",
+            "--disable-setuid-sandbox",
+            "--disable-dev-shm-usage",
+            "--disable-gpu"
+        ]
+    });
+
     const page = await browser.newPage();
 
-    console.log("🔎 Loading category page...");
-    await page.goto(BASE, { waitUntil: "networkidle2" });
+    await page.goto(CATEGORY_URL, { waitUntil: "networkidle2" });
 
-    const links = await page.$$eval("a", as =>
-        as.map(a => a.href).filter(x => x.includes("/posts/"))
+    console.log("📌 Scraping post links…");
+    let links = await page.$$eval("a", anchors =>
+        anchors
+            .map(a => a.href)
+            .filter(href => href && href.includes("/posts/"))
     );
 
-    console.log(`📌 Found ${links.length} post links`);
+    // Remove duplicates
+    links = [...new Set(links)];
 
-    fs.mkdirSync("output", { recursive: true });
+    console.log(`📄 Found ${links.length} SC-400 content pages.`);
 
-    for (let link of links) {
-        const slug = link.split("/").pop() + ".pdf";
-        const file = `output/${slug}`;
-
-        console.log(`🖨 Rendering → ${slug}`);
-
-        await page.goto(link, { waitUntil: "networkidle2" });
-        await page.pdf({
-            path: file,
-            format: "A4",
-            printBackground: true,
-            margin: { top: "10mm", bottom: "10mm" }
-        });
+    if (!links.length) {
+        console.log("⚠️ No content found — site layout may have changed.");
+        await browser.close();
+        return;
     }
 
+    const outputDir = "output";
+    if (!fs.existsSync(outputDir)) {
+        fs.mkdirSync(outputDir);
+    }
+
+    let count = 1;
+
+    for (const link of links) {
+        console.log(`\n📥 Fetching ${count}/${links.length}`);
+        console.log(`🔗 URL: ${link}`);
+
+        try {
+            await page.goto(link, { waitUntil: "networkidle2" });
+
+            const slug = link.split("/").pop().replace(/\/$/, "");
+            const file = `${outputDir}/${slug}.pdf`;
+
+            console.log(`🖨 Rendering PDF → ${file}`);
+
+            await page.pdf({
+                path: file,
+                format: "A4",
+                printBackground: true,
+                margin: {
+                    top: "12mm",
+                    bottom: "12mm",
+                    left: "10mm",
+                    right: "10mm"
+                }
+            });
+
+            console.log("✔ Success");
+        } catch (err) {
+            console.log("❌ Failed:", err.message);
+        }
+
+        count++;
+    }
+
+    console.log("\n✨ All PDFs exported.");
+    console.log("📂 Output directory:", outputDir);
+
     await browser.close();
-    console.log("✨ All PDFs exported!");
 }
 
 scrape();
