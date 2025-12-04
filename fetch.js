@@ -7,7 +7,6 @@ const CATEGORY_URL = BASE + "/categories/sc-400";
 async function scrape() {
     console.log("🔎 Loading SC-400 category page…");
 
-    // Launch Chromium in CI-safe mode
     const browser = await puppeteer.launch({
         headless: true,
         args: [
@@ -15,23 +14,22 @@ async function scrape() {
             "--disable-setuid-sandbox",
             "--disable-dev-shm-usage",
             "--disable-gpu"
-        ]
+        ],
+        executablePath: await puppeteer.executablePath()
     });
 
     const page = await browser.newPage();
-
     await page.goto(CATEGORY_URL, { waitUntil: "networkidle2" });
 
     console.log("📌 Scraping post links…");
+
     let links = await page.$$eval("a", anchors =>
         anchors
             .map(a => a.href)
             .filter(href => href && href.includes("/posts/"))
     );
 
-    // Remove duplicates
     links = [...new Set(links)];
-
     console.log(`📄 Found ${links.length} SC-400 content pages.`);
 
     if (!links.length) {
