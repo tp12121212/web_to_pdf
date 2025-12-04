@@ -8,3 +8,6 @@
     "puppeteer": "^22.0.0"
   }
 }
+"scripts": {
+  "start": "node fetch.js"
+}
