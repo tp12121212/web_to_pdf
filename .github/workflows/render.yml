@@ -48,4 +48,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: sc400-pdfs
-        path: output/        path: output/
+        path: output/
