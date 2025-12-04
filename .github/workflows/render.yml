@@ -18,31 +18,10 @@ jobs:
       with:
         node-version: 18
 
-    - name: Install dependencies
+    - name: Install Puppeteer and dependencies
       run: npm install
 
-    - name: Install Chromium system dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y \
-          libnss3 \
-          libgtk-3-0 \
-          libxss1 \
-          libasound2t64 \
-          libx11-xcb1 \
-          libxcomposite1 \
-          libxcursor1 \
-          libxdamage1 \
-          libxi6 \
-          libxtst6 \
-          libgbm1 \
-          libxrandr2 \
-          libxkbcommon0 \
-          libpangocairo-1.0-0 \
-          libgl1-mesa-dri \
-          libegl1-mesa
-
-    - name: Run SC-400 renderer
+    - name: Run SC-400 PDF renderer
       run: node fetch.js
 
     - name: Upload generated PDFs
