@@ -1,0 +1,40 @@
+name: Render SC-400 PDFs
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v3
+
+    - name: Setup Node
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Install Chromium dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libnss3 \
+          libgtk-3-0 libxss1 libasound2 libx11-xcb1 libxcomposite1 \
+          libxcursor1 libxdamage1 libxi6 libxtst6 libglib2.0-0 \
+          libpangocairo-1.0-0 libxrandr2 libgbm1 libxkbcommon0
+
+    - name: Run renderer
+      run: |
+        node fetch.js
+
+    - name: Upload generated PDFs
+      uses: actions/upload-artifact@v3
+      with:
+        name: sc400-pdfs
+        path: output/
